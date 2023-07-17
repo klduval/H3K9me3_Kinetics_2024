@@ -1,7 +1,5 @@
 #!/bin/bash
 
-BASEDIR="/scratch/kld57880/TC_final"
-
 ###peak calling
 module load Homer/4.11-foss-2019b
 mkdir $BASEDIR/peaks
@@ -24,12 +22,6 @@ done
 for infile in $BASEDIR/peaks/*.txt
 do
   base=$(basename ${infile} .txt)
-  sed '/^#/d' $infile | awk '{print $2 "\t" $3 "\t" $4 "\t" $1 "\t" $8 "\t" $5 "\t" $6 "\t" $12 "\t" "-1"}' | sed 's/\.000000//g' > $BASEDIR/peaks/$base.peaks.bed
-done
-
-for infile in $BASEDIR/peaks/*.txt
-do
-  base=$(basename ${infile} .meh.txt)
   sed '/^#/d' $infile | awk '{print $2 "\t" $3 "\t" $4 "\t" $1 "\t" $8 "\t" $5 "\t" $6 "\t" $12 "\t" "-1"}' | sed 's/\.000000//g' > $BASEDIR/peaks/$base.peaks.bed
 done
 
@@ -93,4 +85,97 @@ for infile in $BASEDIR/peaks/ann/*.trim.txt
 do
 	base=$(basename ${infile} .trim.txt)
 	sed 's:"::g' $infile | sed 's:gene_id::g' | sed 's:transcript_id::g' | sed 's:family_id::g' | sed 's:class_id::g' | sed 's:Cluster::g' | sed 's:TE_classification::g' > $BASEDIR/peaks/ann/$base.txt
+done
+
+#####want to split peaks with pre-ZGA seeding and those without
+bedtools intersect -a $BASEDIR/peaks/4.5hpf_K9_final.bed -b $BASEDIR/peaks/2.5hpf_K9_final.bed -v > $BASEDIR/peaks/4.5hpf_NOseed_peaks.bed
+bedtools intersect -a $BASEDIR/peaks/4.5hpf_K9_final.bed -b $BASEDIR/peaks/2.5hpf_K9_final.bed -wa > $BASEDIR/peaks/4.5hpf_seed_peaks.bed
+
+for infile in $BASEDIR/peaks/*seed*.bed
+do
+  base=$( basename ${infile} final.bed)
+  annotatePeaks.pl $infile danRer11 -gtf $BASEDIR/refann.gtf > $BASEDIR/peaks/ann/$base.maskann.txt
+done
+
+for infile in $BASEDIR/peaks/ann/4.5*seed*maskann.txt
+do
+  base=$(basename ${infile} .maskann.txt)
+  awk -F'\t' 'sqrt($10*$10) <=1000' $infile > $BASEDIR/peaks/ann/$base.1000bp_ann.txt
+done
+
+for infile in $BASEDIR/peaks/ann/4.5*seed*maskann.txt
+do
+  base=$(basename ${infile} .maskann.txt)
+  awk -F'\t' 'sqrt($10*$10) >=1000' $infile | awk '{print $2 "\t" $3 "\t" $4 }' > $BASEDIR/peaks/ann/$base.MOREthan1000bp.bed
+done
+
+for infile in $BASEDIR/peaks/ann/4.5*seed*.MOREthan1000bp.bed
+do
+  base=$( basename ${infile} .MOREthan1000bp.bed)
+  bedtools intersect -a $infile -b /work/mglab/kld/TEfiles_Chang_etal/TEann.gtf -F 0.50 -wo > $BASEDIR/peaks/ann/$base.TEann.txt
+done
+
+for infile in $BASEDIR/peaks/ann/4.5*seed*TEann.txt
+do
+	base=$(basename ${infile} _.TEann.txt)
+	sed 's:;:\t:g' $infile > $BASEDIR/peaks/ann/$base.trim.txt
+done
+
+for infile in $BASEDIR/peaks/ann/4.5*seed*.trim.txt
+do
+	base=$(basename ${infile} .trim.txt)
+	sed 's:"::g' $infile | sed 's:gene_id::g' | sed 's:transcript_id::g' | sed 's:family_id::g' | sed 's:class_id::g' | sed 's:Cluster::g' | sed 's:TE_classification::g' > $BASEDIR/peaks/ann/$base.txt
+done
+
+####now going to intersect peaks with the TC_pericentromeres
+mkdir $BASEDIR/peric/peak_int
+
+for infile in $BASEDIR/peaks/*final.bed
+do
+  base=$(basename ${infile} _final.bed)
+  bedtools intersect -a $infile -b $BASEDIR/peric/centromeres_sloppy.bed -wa > $BASEDIR/peric/peak_int/$base.peric.bed
+  bedtools intersect -a $infile -b $BASEDIR/peric/centNULL_total.bed -wa > $BASEDIR/peric/peak_int/$base.null.bed
+done
+
+for infile in $BASEDIR/peric/peak_int/*.bed
+do
+  base=$( basename ${infile} final.bed)
+  annotatePeaks.pl $infile danRer11 -gtf $BASEDIR/refann.gtf > $BASEDIR/peric/peak_int/$base.maskann.txt
+done
+
+for infile in $BASEDIR/peric/peak_int/*maskann.txt
+do
+  base=$(basename ${infile} .maskann.txt)
+  awk -F'\t' 'sqrt($10*$10) <=1000' $infile > $BASEDIR/peric/peak_int/$base.1000bp_ann.txt
+done
+
+for infile in $BASEDIR/peric/peak_int/*maskann.txt
+do
+  base=$(basename ${infile} .maskann.txt)
+  awk -F'\t' 'sqrt($10*$10) >=1000' $infile | awk '{print $2 "\t" $3 "\t" $4 }' > $BASEDIR/peric/peak_int/$base.MOREthan1000bp.bed
+done
+
+for infile in $BASEDIR/peric/peak_int/*.MOREthan1000bp.bed
+do
+  base=$( basename ${infile} .MOREthan1000bp.bed)
+  bedtools intersect -a $infile -b /work/mglab/kld/TEfiles_Chang_etal/TEann.gtf -F 0.50 -wo > $BASEDIR/peric/peak_int/$base.TEann.txt
+done
+
+for infile in $BASEDIR/peric/peak_int/*TEann.txt
+do
+	base=$(basename ${infile} _.TEann.txt)
+	sed 's:;:\t:g' $infile > $BASEDIR/peric/peak_int/$base.trim.txt
+done
+
+for infile in $BASEDIR/peric/peak_int/*.trim.txt
+do
+	base=$(basename ${infile} .trim.txt)
+	sed 's:"::g' $infile | sed 's:gene_id::g' | sed 's:transcript_id::g' | sed 's:family_id::g' | sed 's:class_id::g' | sed 's:Cluster::g' | sed 's:TE_classification::g' > $BASEDIR/peric/peak_int/$base.txt
+done
+
+for infile in $BASEDIR/peaks/*seed*.bed
+do
+  base=$(basename ${infile} .bed)
+  bedtools intersect -a $infile -b $BASEDIR/peric/centromeres_sloppy.bed -wa > $BASEDIR/peric/peak_int/$base.peric.bed
+  bedtools intersect -a $infile -b $BASEDIR/peric/centNULL_total.bed -wa > $BASEDIR/peric/peak_int/$base.null.bed
 done
