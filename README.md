@@ -1,2 +1,3 @@
-# TE_Paper_2023
-Final scripts for the TE paper
+Scripts used in data analysis for 
+
+(Paper Title). Duval, KL, Artis, A, Goll, MG
