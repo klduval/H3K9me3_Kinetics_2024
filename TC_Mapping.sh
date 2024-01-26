@@ -1,8 +1,4 @@
 #!/bin/bash
-
-BASEDIR="/scratch/kld57880/TC_final"
-TOOLDIR='/home/kld57880/Git2/toolbox'
-
 ###trimming, multiQC, and aligning to danio genome
 module load STAR/2.7.2b-GCC-8.3.0
 
