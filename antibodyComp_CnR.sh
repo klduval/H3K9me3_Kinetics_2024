@@ -1,5 +1,4 @@
 #!/bin/bash
-
 ###trimming, multiQC, and aligning to danio genome
 module load STAR/2.7.2b-GCC-8.3.0
 
