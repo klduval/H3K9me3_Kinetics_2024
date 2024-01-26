@@ -1,5 +1,4 @@
 #!/bin/bash
-
 module load Anaconda3/5.0.1
 source activate genmap_kd
 
@@ -23,7 +22,6 @@ computeMatrix scale-regions -S $BASEDIR/map_75bp.bw -R $BASEDIR/TEfiles_Chang_et
 ###in R, averaged each row across columns to give average mappability score to each TE, length normalized
 ###then combined back with the coordinates to make bed file with chr start end map score
 ###now need to go back and re-add the annotation to that
-
 module load BEDTools/2.29.2-GCC-8.3.0
 
 bedtools intersect -a $BASEDIR/TEfiles_Chang_etal/TEann.gtf -b $BASEDIR/TE_75bp_coords_score.bed -f 0.95 -wa -wb | sort | uniq > $BASEDIR/TEann_75mappabilityScore.bed
