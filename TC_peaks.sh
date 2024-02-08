@@ -1,16 +1,4 @@
 #!/bin/bash
-#SBATCH --job-name=K9_timecourse
-#SBATCH --partition=batch
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --mem=40gb
-#SBATCH --time=12:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=kld57880@uga.edu
-
-BASEDIR="/scratch/kld57880/TC_final"
-TOOLDIR='/home/kld57880/Git2/toolbox'
-
 ###peak calling
 module load Homer
 mkdir $BASEDIR/peaks
