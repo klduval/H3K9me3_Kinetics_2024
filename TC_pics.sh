@@ -1,16 +1,4 @@
 #!/bin/bash
-#SBATCH --job-name=K9_timecourse
-#SBATCH --partition=batch
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --mem=60gb
-#SBATCH --time=12:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=kld57880@uga.edu
-
-BASEDIR="/scratch/kld57880/TC_final"
-WORK="/work/mglab/kld"
-
 ###lets make these bedgraphs into bigwigs for data visualization
 module load ucsc/359
 mkdir $BASEDIR/bws
