@@ -19,12 +19,12 @@ K9_4.5hpf_250kb_bw <- "/Users/mangofrog7/Documents/Graduate_School/Projects/bioi
 kp <- plotKaryotype(genome = Z11_genome, plot.type = 2, plot.params = pp, chromosomes = c("9", "12", "18", "25"))
 kpAddBaseNumbers(kp)
 kpPlotBigWig(kp, data=K9_4.5hpf_250kb_bw, ymax="visible.region", col="midnightblue")
-kpPlotRegions(kp, data=BRSAT1, data.panel=2)
+kpPlotDensity(kp, data=BRSAT1, window.size = 50000, data.panel = 2, col="red4", r0 = 0, r1 = 0.75)
 
 kp_full <- plotKaryotype(genome = Z11_genome, plot.type = 2, plot.params = pp)
 kpAddBaseNumbers(kp_full)
 kpPlotBigWig(kp_full, data=K9_4.5hpf_250kb_bw, ymax="visible.region", col="midnightblue")
-kpPlotRegions(kp_full, data=BRSAT1, data.panel=2)
+kpPlotDensity(kp_full, data=BRSAT1, window.size = 50000, data.panel = 2, col="red4", r0 = 0, r1 = 0.75)
 
 kp2 <- plotKaryotype(genome = Z11_genome, plot.params = pp, chromosomes = c("9", "12", "18", "25", "4"))
 kpPlotDensity(kp2, data=peaks_4.5hpf, window.size = 300000, col="midnightblue")
