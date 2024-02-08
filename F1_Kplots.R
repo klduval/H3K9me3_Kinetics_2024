@@ -1,20 +1,19 @@
-###here we are going to make some karyoplots for the paper 
 library("karyoploteR")
 library("tidyverse")
 library("dplyr")
 library("tidyr")
 
-genome <- read.table("/Users/mangofrog7/Documents/Graduate_School/Projects/bioinformatics/general/chrNL.txt", col.names = c("1", "2", "3"))
+genome <- read.table("chrNL.txt", col.names = c("1", "2", "3"))
 Z11_genome <- toGRanges(genome)
 
 pp <- getDefaultPlotParams(plot.type=2)
 pp$ideogramheight <- 25
 
-peaks_4.5hpf <- read.table("/Users/mangofrog7/Documents/Graduate_School/Projects/bioinformatics/TC_final/peaks/4.5hpf_K9_final.bed") %>% select(., "V1", "V2", "V3")
+peaks_4.5hpf <- read.table("4.5hpf_K9_final.bed") %>% select(., "V1", "V2", "V3")
 peaks_4.5hpf <- toGRanges(peaks_4.5hpf)
-BRSAT1_coords <- read.table("/Users/mangofrog7/Documents/Graduate_School/Projects/bioinformatics/TC_final/pericentromere/BRSAT1_final.bed") %>% select(., "V1", "V2", "V3")
+BRSAT1_coords <- read.table("BRSAT1_final.bed") %>% select(., "V1", "V2", "V3")
 BRSAT1 <- toGRanges(BRSAT1_coords)
-K9_4.5hpf_250kb_bw <- "/Users/mangofrog7/Documents/Graduate_School/Projects/bioinformatics/TC_final/bws/4.5hpf_K9_250kbBS_AVG.bw"
+K9_4.5hpf_250kb_bw <- "4.5hpf_K9_250kbBS_AVG.bw"
 
 kp <- plotKaryotype(genome = Z11_genome, plot.type = 2, plot.params = pp, chromosomes = c("9", "12", "18", "25"))
 kpAddBaseNumbers(kp)
