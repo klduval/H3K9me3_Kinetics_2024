@@ -1,17 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=piRNA
-#SBATCH --partition=batch
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --mem=100gb
-#SBATCH --time=24:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=kld57880@uga.edu
-
-BASEDIR="/scratch/kld57880/piRNA_Kaaij_etal"
-TOOLDIR='/home/kld57880/Git2/toolbox'
-
-###downloaded their trimmed fastq files and we will go ahead aligning those
+###downloaded trimmed fastq files from Kaaij et al 2011
 ml STAR
 mkdir $OUTDIR/bams
 
@@ -61,7 +49,6 @@ bedtools intersect -a /work/mglab/kld/TEanns/TEann_35_0.1filt.bed -b $BASEDIR/pi
 awk '{print $4}' $BASEDIR/piRNA_3hK9_wTEs.bed | sort - | uniq -c | awk '{print $1 "\t" $2}'> $BASEDIR/piRNA_3hK9_TEs_counts.bed
 
 ###pictures at K9 peaks
-TCDIR='/scratch/kld57880/TC_final'
 mkdir $BASEDIR/matrices
 
 ml deepTools
