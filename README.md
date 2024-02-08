@@ -1,3 +1,1 @@
-Scripts used in data analysis for 
-
-(Paper Title). Duval, KL, Artis, A, Goll, MG
+Scripts used in data analysis and figure generation for Duval et al 2024
