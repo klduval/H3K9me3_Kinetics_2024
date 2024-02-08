@@ -1,16 +1,4 @@
 #!/bin/bash
-#SBATCH --job-name=anti_cut&run
-#SBATCH --partition=batch
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --mem=80gb
-#SBATCH --time=24:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=kld57880@uga.edu
-
-BASEDIR="/scratch/kld57880/antiK9_5.2022"
-TOOLDIR='/home/kld57880/Git2/toolbox'
-
 ##trimming, multiQC, and aligning to danio genome
 module load STAR/2.7.2b-GCC-8.3.0
 
@@ -67,7 +55,7 @@ done
 samtools merge -f $BASEDIR/bams/mIgG_nodups.bam $BASEDIR/bams/*IgG*hpf_nodups.bam
 samtools merge -f $BASEDIR/bams/mIgG_ecoli_nodups.bam $BASEDIR/bams/*IgG*ecoli*nodups.bam
 
-# ###Now we need to extract all the aligned reads in preperation for spike in normalization
+####Now we need to extract all the aligned reads in preperation for spike in normalization
 module load BEDTools
 
 for infile in $BASEDIR/bams/*nodups.bam
@@ -232,7 +220,7 @@ bigwigCompare -b1 $BASEDIR/bws/K9diag_2.5hpf_rep1rep2.bw -b2 $BASEDIR/bws/K9dia_
 for infile in $BASEDIR/peaks/*all.bed
 do
   base=$( basename ${infile} repPeaks_all.bed)
-  bedtools intersect -a $infile -b /scratch/kld57880/TC_final/peaks/blacklist.bed -v > $BASEDIR/peaks/"$base"_final.bed
+  bedtools intersect -a $infile -b blacklist.bed -v > $BASEDIR/peaks/"$base"_final.bed
 done
 
 ###going to do a couple peak intersections for some analysis
