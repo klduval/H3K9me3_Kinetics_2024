@@ -68,32 +68,38 @@ h4.5hpf <- read_delim("/Users/mangofrog7/Documents/Graduate_School/Projects/bioi
   mutate_if(is.factor, ~as.numeric(as.character(.)))
 
 h2hpf_scores <- h2hpf %>% rowwise() %>% mutate(total = rowSums(across(where(is.numeric)))) %>%
-  mutate(time_point = "2hpf")
+  mutate(time_point = "2hpf") %>% mutate(EGA = "pre")
 as_tibble(rowSums(h2hpf)) %>% mutate(time_point = "2hpf")
 h2.5hpf_scores <- h2.5hpf %>% rowwise() %>% mutate(total = rowSums(across(where(is.numeric)))) %>% 
-  mutate(time_point = "2.5hpf")
+  mutate(time_point = "2.5hpf") %>% mutate(EGA = "pre")
 h3hpf_scores <- h3hpf %>% rowwise() %>% mutate(total = rowSums(across(where(is.numeric)))) %>% 
-  mutate(time_point = "3hpf")
+  mutate(time_point = "3hpf") %>% mutate(EGA = "pre")
 h3.5hpf_scores <- h3.5hpf %>% rowwise() %>% mutate(total = rowSums(across(where(is.numeric)))) %>% 
-  mutate(time_point = "3.5hpf")
+  mutate(time_point = "3.5hpf") %>% mutate(EGA = "post")
 h4hpf_scores <- h4hpf %>% rowwise() %>% mutate(total = rowSums(across(where(is.numeric)))) %>% 
-  mutate(time_point = "4hpf")
+  mutate(time_point = "4hpf") %>% mutate(EGA = "post")
 h4.5hpf_scores <- h4.5hpf %>% rowwise() %>% mutate(total = rowSums(across(where(is.numeric)))) %>% 
-  mutate(time_point = "4.5hpf")
+  mutate(time_point = "4.5hpf") %>% mutate(EGA = "post")
 
 height_scores_combined <- bind_rows(h2hpf_scores, h2.5hpf_scores, h3hpf_scores, h3.5hpf_scores, h4hpf_scores, h4.5hpf_scores)
-height_scores_combined <- height_scores_combined %>% 
-  mutate(time_point = factor(time_point, levels = c("2hpf", "2.5hpf", "3hpf", "3.5hpf", "4hpf", "4.5hpf")))
 
 height_noOutliers <- height_scores_combined %>% 
   group_by(time_point) %>% 
   mutate(zPW = scale(total)) %>% 
-  filter(between(zPW,-5,+5))
+  filter(between(zPW,-5,+5)) %>%
+  mutate(time_point = factor(time_point, levels = c("2hpf", "2.5hpf", "3hpf", "3.5hpf", "4hpf", "4.5hpf")))
 
-peak_height <- ggplot(height_noOutliers, aes(x = time_point, y = total, fill=time_point)) + 
-  geom_violin(trim=FALSE, scale="width") + 
-  labs(y = "Peak Height")+ 
+t_test_height <- compare_means(total ~ EGA, p.adjust.method = "bonferroni", method='t.test', data = height_noOutliers)  
+t_test_height <- t_test_height %>% mutate(y.position = c(40000))
+##p value is 0 but will add manually in illustrator
+
+peak_height <- ggplot(height_noOutliers, aes(x = time_point, y = total)) + 
+  geom_violin(trim=FALSE, scale="width", aes(fill=time_point)) + 
+  labs(y = "Average H3K9me3 Signal") + 
   theme_minimal() + scale_fill_brewer(palette="Blues") +
-  geom_boxplot(width=0.1, outlier.shape=NA) + theme(legend.position="none") +
-  theme(text = element_text(size = 8))
+  geom_boxplot(width=0.1, outlier.shape=NA, aes(fill=time_point)) + theme(legend.position="none") +
+  theme(text = element_text(size = 8)) + ylim(0,45000) +
+  theme(axis.title.x = element_blank()) 
+  stat_pvalue_manual(t_test_height, label = "p.adj", hide.ns = TRUE, tip.length = 0.0, size = 2.5)
+
 ggsave("/Users/mangofrog7/Documents/Graduate_School/Papers/K9_Kinetics/Fig3/peak_height.pdf", plot = peak_height, width = 2, height = 2.5, units = "in")
