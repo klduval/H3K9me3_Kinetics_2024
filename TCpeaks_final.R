@@ -33,20 +33,6 @@ ref_ann <- left_join(ref_ann, TE_counts_0.1filt)
 big_name_table <- left_join(ref_ann, combTC) %>% mutate(., cn_prop = count / copyNumber_0.1) %>% 
   filter(., Class %in% c("DNA", "LTR", "LINE", "SINE")) %>% filter(copyNumber_0.1 >= 10) %>% filter(isLTR == "FALSE")
 
-###making supp table 2####
-int_df <- big_name_table %>% select(Name, Family, Class,copyNumber_0.1, count, timepoint)
-
-table2 <- pivot_wider(int_df, 
-            id_cols = c(Name, Family, Class,copyNumber_0.1), 
-            names_from = "timepoint", 
-            values_from = "count") %>% select(!"NA")
-table2[is.na(table2)] <- 0
-
-Table_S2 <- table2 %>% select(Name, Family, Class,copyNumber_0.1, "2 hpf", "2.5 hpf", "3 hpf", "3.5 hpf", "4 hpf", "4.5 hpf")
-
-write.csv(Table_S2, "~/Table_S2.csv")
-
-
 ##analysing annotation####
 
 K9_4.5h_only <- big_name_table %>% filter(timepoint == "4.5 hpf")
