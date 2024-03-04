@@ -1,4 +1,16 @@
 #!/bin/bash
+#SBATCH --job-name=K9_timecourse
+#SBATCH --partition=batch
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=40gb
+#SBATCH --time=12:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=kld57880@uga.edu
+
+BASEDIR="/scratch/kld57880/TC_final"
+TOOLDIR='/home/kld57880/Git2/toolbox'
+
 ###peak calling
 module load Homer
 mkdir $BASEDIR/peaks
@@ -67,16 +79,16 @@ do
   awk -F'\t' 'sqrt($10*$10) >=1000' $infile | awk '{print $2 "\t" $3 "\t" $4 }' > $BASEDIR/peaks/ann/$base.MOREthan1000bp.bed
 done
 
-for infile in $BASEDIR/peaks/ann/*.MOREthan1000bp.bed
+for infile in $BASEDIR/peaks/*final.bed
 do
-  base=$( basename ${infile} .MOREthan1000bp.bed)
-    bedtools intersect -a /work/mglab/kld/TEanns/*0.1*.bed -b $infile -f 0.50 -u > $BASEDIR/peaks/ann2/$base.$base2.txt
+  base=$( basename ${infile} final.bed)
+    bedtools intersect -a /work/mglab/kld/TEanns/*0.1*.bed -b $infile -f 0.50 -u > $BASEDIR/peaks/ann4/$base.TEann.txt
 done
 
-for infile in $BASEDIR/peaks/ann2/*.txt
+for infile in $BASEDIR/peaks/ann4/*_.TEann.txt
 do
-  base=$(basename ${infile} .txt)
-  awk '{print $4}' $infile | sort - | uniq -c | awk '{print $1 "\t" $2}'> $BASEDIR/"$base"_counts.bed
+  base=$(basename ${infile} _.TEann.txt)
+  awk '{print $4}' $infile | sort - | uniq -c | awk '{print $1 "\t" $2}'> $BASEDIR/"$base"_TEcounts2.bed
 done
 
 ####timcecourse intersection####
@@ -86,6 +98,14 @@ cat $BASEDIR/peaks/2hpf_K9_final.bed $BASEDIR/peaks/2.5hpf_K9_final.bed $BASEDIR
 cat $BASEDIR/peaks/3.5hpf_K9_final.bed $BASEDIR/peaks/4hpf_K9_final.bed $BASEDIR/peaks/4.5hpf_K9_final.bed | bedtools sort | bedtools merge -i - > $BASEDIR/peaks/postEGA_peaks_total.bed
 bedtools intersect -a $BASEDIR/peaks/postEGA_peaks_total.bed -b $BASEDIR/peaks/preEGA_peaks_total.bed -v > $BASEDIR/peaks/postEGApeaks_comp.bed
 
+####EGA annotation
+bedtools intersect -a /work/mglab/kld/TEanns/*0.1*.bed -b $BASEDIR/peaks/postEGApeaks_comp.bed -f 0.50 -u > $BASEDIR/peaks/postEGA_comp.TEann.txt
+awk '{print $4}' $BASEDIR/peaks/postEGA_comp.TEann.txt | sort - | uniq -c | awk '{print $1 "\t" $2}'> $BASEDIR/postEGA_comp_TEcounts.bed
+
+bedtools intersect -a /work/mglab/kld/TEanns/*0.1*.bed -b $BASEDIR/peaks/preEGA_peaks_total.bed -f 0.50 -u > $BASEDIR/peaks/preEGA_peaks_total.TEann.txt
+awk '{print $4}' $BASEDIR/peaks/preEGA_peaks_total.TEann.txt | sort - | uniq -c | awk '{print $1 "\t" $2}'> $BASEDIR/preEGA_peaks_total_TEcounts.bed
+
+###peric int
 mkdir $BASEDIR/peric/peak_int2
 bedtools intersect -a $BASEDIR/peaks/preEGA_peaks_total.bed -b $BASEDIR/peric/centromeres_sloppy2.bed -wa > $BASEDIR/peric/peak_int2/preEGA_peaks.peric.bed
 bedtools intersect -a $BASEDIR/peaks/postEGApeaks_comp.bed -b $BASEDIR/peric/centromeres_sloppy2.bed -wa > $BASEDIR/peric/peak_int2/postEGApeaks_comp.peric.bed
@@ -105,4 +125,71 @@ done
 for infile in $BASEDIR/peric/null/*.postEGA.bed
 do
   wc -l $infile >> $BASEDIR/peric/postEGA_peaks_null_ints.tsv
+done
+
+#####overlap with piRNA targets
+mkdir $BASEDIR/piRNA_int
+bedtools intersect -a $BASEDIR/peaks/preEGA_peaks_total.bed -b /scratch/kld57880/piRNA_Kaaij_etal/expTEs_2.bed -wa > $BASEDIR/piRNA_int/preEGA_peaks.piRNA.bed
+bedtools intersect -a $BASEDIR/peaks/postEGApeaks_comp.bed -b /scratch/kld57880/piRNA_Kaaij_etal/expTEs_2.bed -wa > $BASEDIR/piRNA_int/postEGApeaks_comp.piRNA.bed
+
+##make null set of piRNA coords
+mkdir $BASEDIR/piRNA_int/null
+for ((i=1;i<=1000;i++));
+do
+  bedtools shuffle -chrom -noOverlapping -i /scratch/kld57880/piRNA_Kaaij_etal/expTEs_2.bed -excl /scratch/kld57880/piRNA_Kaaij_etal/expTEs_2.bed -g $BASEDIR/genome/chrNameLength.txt > $BASEDIR/piRNA_int/null/piRNAnull_"$i".bed
+done
+
+for infile in $BASEDIR/piRNA_int/null/piRNAnull_*.bed
+do
+ base=$(basename ${infile} .bed)
+  bedtools intersect -a $BASEDIR/peaks/preEGA_peaks_total.bed -b $infile -wa > $BASEDIR/piRNA_int/null/$base.preEGA.bed
+  bedtools intersect -a $BASEDIR/peaks/postEGApeaks_comp.bed -b $infile -wa > $BASEDIR/piRNA_int/null/$base.postEGA.bed
+done
+
+for infile in $BASEDIR/piRNA_int/null/*.preEGA.bed
+do
+  wc -l $infile >> $BASEDIR/piRNA_int/preEGA_peaks_null_ints.tsv
+done
+
+for infile in $BASEDIR/piRNA_int/null/*.postEGA.bed
+do
+  wc -l $infile >> $BASEDIR/piRNA_int/postEGA_peaks_null_ints.tsv
+done
+
+#####
+bedtools intersect -a $BASEDIR/peaks/preEGA_peaks_total.bed -b $BASEDIR/peric/centromeres_sloppy2.bed /scratch/kld57880/piRNA_Kaaij_etal/expTEs_2.bed -v > $BASEDIR/peaks/preEGA_K9peaks_noperic_nopiRNA.bed
+bedtools intersect -a $BASEDIR/piRNA_int/preEGA_peaks.piRNA.bed -b $BASEDIR/peric/centromeres_sloppy2.bed -v > $BASEDIR/peaks/preEGA_K9peaks_piRNA_only.bed
+bedtools intersect -a $BASEDIR/piRNA_int/preEGA_peaks.piRNA.bed -b $BASEDIR/peric/centromeres_sloppy2.bed -wa > $BASEDIR/peaks/preEGA_K9peaks_piRNA_N_peric.bed
+bedtools intersect -a $BASEDIR/peric/peak_int2/preEGA_peaks.peric.bed -b $BASEDIR/piRNA_int/preEGA_peaks.piRNA.bed -v > $BASEDIR/peaks/preEGA_K9peaks_peric_only.bed
+
+bedtools intersect -a $BASEDIR/peaks/postEGApeaks_comp.bed -b $BASEDIR/peric/centromeres_sloppy2.bed /scratch/kld57880/piRNA_Kaaij_etal/expTEs_2.bed -v > $BASEDIR/peaks/postEGA_K9peaks_noperic_nopiRNA.bed
+bedtools intersect -a $BASEDIR/piRNA_int/postEGApeaks_comp.piRNA.bed -b $BASEDIR/peric/centromeres_sloppy2.bed -v > $BASEDIR/peaks/postEGA_K9peaks_piRNA_only.bed
+bedtools intersect -a $BASEDIR/piRNA_int/postEGApeaks_comp.piRNA.bed -b $BASEDIR/peric/centromeres_sloppy2.bed -wa > $BASEDIR/peaks/postEGA_K9peaks_piRNA_N_peric.bed
+bedtools intersect -a $BASEDIR/peric/peak_int2/postEGApeaks_comp.peric.bed -b $BASEDIR/piRNA_int/postEGApeaks_comp.piRNA.bed -v > $BASEDIR/peaks/postEGA_K9peaks_peric_only.bed
+
+for infile in $BASEDIR/peaks/preEGA_K9peaks_*.bed
+do
+  base=$(basename ${infile} .bed)
+  bedtools intersect -a /work/mglab/kld/TEanns/*0.1*.bed -b $infile -f 0.50 -u > $BASEDIR/peaks/$base.TEann.txt
+done
+
+for infile in $BASEDIR/peaks/preEGA_K9peaks_*.TEann.txt
+do
+  base=$(basename ${infile} .TEann.txt)
+  awk '{print $4}' $infile | sort - | uniq -c | awk '{print $1 "\t" $2}'> $BASEDIR/"$base"_TEcounts.bed
+done
+
+for infile in $BASEDIR/peaks/preEGA_K9peaks_*.bed
+do
+  base=$(basename ${infile} .bed)
+  bedtools intersect -a $infile -b /work/mglab/kld/TEanns/*0.1*.bed -F 0.50 -u -wa -wb > $BASEDIR/peaks/$base.peakTEann.txt
+done
+
+for infile in $BASEDIR/peaks/preEGA_K9peaks_*.bed
+do
+  base=$(basename ${infile} .bed)
+  bedtools intersect -a $infile -b $BASEDIR/LTRsonly.bed -u > $BASEDIR/peaks/$base.LTRpeaks.bed
+  bedtools intersect -a $infile -b $BASEDIR/LINEsonly.bed -u > $BASEDIR/peaks/$base.LINEpeaks.bed
+  bedtools intersect -a $infile -b $BASEDIR/DNAsonly.bed -u > $BASEDIR/peaks/$base.DNApeaks.bed
+  bedtools intersect -a $infile -b $BASEDIR/SINEsonly.bed -u > $BASEDIR/peaks/$base.SINEpeaks.bed
 done
